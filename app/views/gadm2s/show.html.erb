@@ -1,10 +1,8 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
-<title>Top Users By Country</title>
+<title>Level 2 Places By Country</title>
 <style>
-  .feature {
-    fill: #E56B25;
-    fill-opacity: 1;
+  .subunit {
     cursor: pointer;
     stroke: #fff;
     stroke-linecap: round;
@@ -59,7 +57,6 @@
 <script src="https://d3js.org/d3.v3.min.js"></script>
 <script src="https://d3js.org/d3-random.v1.min.js"></script>
 <script src="//d3js.org/topojson.v1.min.js"></script>
-<script src="https://d3js.org/queue.v1.min.js"></script>
 <script>
   
 window.mobilecheck = function() {
@@ -68,10 +65,7 @@ window.mobilecheck = function() {
   return check;
 }
 
-var lat_sep = 10;
-var lng_sep = 10;
-var randomlat = d3.randomUniform(0, 3*lat_sep/10);
-var randomlng = d3.randomUniform(0, 3*lng_sep/10);
+var color = d3.scale.category10();
 
 var width = 960,
   height = 600;
@@ -105,16 +99,9 @@ d3.selection.prototype.moveToFront = function() {
   });
 };
 
-queue()
-	.defer(d3.json, "https://loarie.github.io/map_users_<%= @user_map.name %>.json")
-  .await(renderGraph);
-
-function renderGraph(error, users) {
-
-
 d3.json("../admin0.json", function(error, collection) {
   if (error) throw error;
-  var country_id = "<%= @user_map.name.upcase %>";
+  var country_id = "<%= @gadm2.name.upcase %>";
   var it = topojson.feature(collection, collection.objects.subunits).features.filter(function(d){return d.id == country_id;})
   var p = d3.geo.centroid(it[0])
   var currentScale = projection.scale();
@@ -128,7 +115,6 @@ d3.json("../admin0.json", function(error, collection) {
   
   layer1.selectAll("path")
     .data( topojson.feature( collection, collection.objects.subunits ).features )
-    //.data( collection.features )
     .enter().append("path")
     .filter(function(d){ return d.id != country_id;})
     .attr("d", path)
@@ -136,148 +122,37 @@ d3.json("../admin0.json", function(error, collection) {
     .attr("class", "background")
     .attr("c", function(d){ return d.id; });
   
-  d3.json("https://loarie.github.io/" + country_id.toLowerCase() + "_admin1.json", function(error, a1) {
+  d3.json("../gadm2/<%= @gadm2.name %>2.json", function(error, a1) {
     if (error) return console.error(error);
-    layer1.append("path")
-      .datum(topojson.feature(a1, a1.objects.subunits))
+    layer1.selectAll(".subunit")
+      .data(topojson.feature(a1, a1.objects.subunits).features)
+      .enter().append("path")
+      .attr("class", "subunit")
+      .attr("id", function(d) { return d.id.replace(".","_").replace(".","_"); })
       .attr("d", path)
-      .attr("class", "feature");
-    });
-  
-  var rad_scale = d3.scale.log()
-    .domain( [d3.min(users.map(function(n){return n.observation_count})),d3.max(users.map(function(n){return n.observation_count}))] )
-    .range( [3,25] );
-  
-  var nodes = users.map(function(d) {
-    var x = projection([parseFloat(d.lng), parseFloat(d.lat)])[0];
-    var y = projection([parseFloat(d.lng), parseFloat(d.lat)])[1];
-    return {
-      y: y,
-      x: x,
-      icon: d.icon,
-      login: d.login,
-      observation_count: d.observation_count,
-      user_id: d.user_id,
-      overlapped: true,
-      r: rad_scale(d.observation_count)
-    };
-  });
-  nodes[0].overlapped = false
-      
-  function tick() {
-    nodes.forEach(collided);
-    nodes.forEach(function(n) {
-      if (n.overlapped) {
-        n.x += d3.randomUniform(-0.5,0.5)();
-        n.y += d3.randomUniform(-0.5,0.5)();
-      }
-    });
-  }
-  
-  function collided(node, i) {
-    if (!node.overlapped) return;
-    node.overlapped = false
-    nodes.forEach(function(n, j) {
-      if (n !== node) {
-        var dx = node.x - n.x, dy = node.y - n.y,
-          l = Math.sqrt(dx*dx+dy*dy);
-        if (l < node.r + n.r - d3.min([node.r,n.r])) {
-          node.overlapped = true;
+      .attr("fill", function(d) { return color(d.properties.l1.split(".")[1].split("_")[0] % 10); })
+      .style("pointer-events", "all")
+  	  .on("mouseover", showTooltip )
+  	  .on("mouseout",  removeTooltip)
+      .on("click", function(d){
+        if(!window.mobilecheck()){
+          var url = "https://www.inaturalist.org/observations?verifiable=true"
+          window.open(url);
         }
-      }
+      });
     });
-  }
   
-  while (nodes.filter(function(n) { return !n.overlapped; }).length < nodes.length) {
-    tick();
-  }
-
-  var node = svg.select("#main").selectAll("g")
-    .data(nodes)
-    .enter()
-    .append("g")
-    .attr("transform", function(d) {
-      return "translate("+d.x+","+d.y+")"
-     })
-     .attr("class", function(d,i) { return "cell_" + d.user_id; });
-  
-  node.append("circle")
-    .attr("r", function(d) {
-      return d.r;
-    })
-    .attr("class", function(d,i) { return "cell_" + d.user_id; }) 
-    .style("fill", "white")
-    .style("stroke", "black")
-    .style("stroke-width", 0.25);
-    
-  node.append("clipPath")
-    .attr('id', function(d, i) {
-      return "clip" + i
-    })
-    .append("circle")
-    .attr("class", "clip-path")
-    .attr("r", function(d) {
-      return d.r;
-    });
-
-  node.append("svg:image")
-    .attr("class", "circle")
-    .attr("xlink:href", function(d){
-      if(d.icon == null){
-        return "https://www.inaturalist.org/attachment_defaults/users/icons/defaults/thumb.png";
-      }else{
-        return d.icon.replace("medium","thumb");
-      }
-    })
-    .attr("clip-path", function(d, i) {
-      return "url(#clip" + i + ")"
-    })
-    .attr("x", function(d) {
-      return -d.r;
-    })
-    .attr("y", function(d) {
-      return -d.r;
-    })
-    .attr("width", function(d) {
-      return d.r * 2;
-    })
-    .attr("height", function(d) {
-      return d.r * 2;
-    });
-    
-  var voronoi = d3.geom.voronoi()
-	  .x(function(d) { return d.x; })
-	  .y(function(d) { return d.y; })
-	  .clipExtent([[0, 0], [width, height]]);
-  
-  svg.selectAll(".voronoi")
-    .data(voronoi(nodes))
-  	.enter().append("path")
-  	.attr("d", function(d, i) { return "M" + d.join("L") + "Z"; })
-  	.datum(function(d, i) { return d.point; })
-  	.attr("class", function(d,i) { return "voronoi_" + d.user_id; })
-  	.style("fill", "none")
-  	.style("pointer-events", "all")
-  	.on("mouseover", showTooltip )
-  	.on("mouseout",  removeTooltip)
-    .on("click", function(d){
-      if(!window.mobilecheck()){
-        var url = "https://www.inaturalist.org/observations?verifiable=true&user_id="+d.user_id
-        window.open(url);
-      }
-    });
 
     //Example of a default tooltip where you make use of "this"
     //Show the tooltip on the hovered over element
     function showTooltip(d) {
-      
-      var element = d3.selectAll(".cell_"+d.user_id);
-      var element_parent = d3.selectAll("g.cell_"+d.user_id);
-      element_parent.moveToFront();
+      console.log(d)
+      var element = d3.selectAll("#"+d.id.replace(".","_").replace(".","_"));
       var extent = d3.selectAll(".extent");
       element.style("stroke", "#000")
         .style("stroke-width", "2px");
       
+      console.log(element)
       //3 ways to do this
       //var position = [parseInt(element.attr("cx")),parseInt(element.attr("cy"))]; //unresponsive using an element
       //var position = [d3.event.pageX,d3.event.pageY];  //using the mouse - responsive
@@ -286,7 +161,7 @@ d3.json("../admin0.json", function(error, collection) {
       var base_width = 200;
       
       if(position[0]<(base_width/2)){
-        position[0] = 0;
+        position[0] = (base_width/2);
       }else if(position[0]>(extent.position().width - base_width/2 - 2)){
         position[0] = extent.position().width - base_width - 20;
       }else{
@@ -300,12 +175,8 @@ d3.json("../admin0.json", function(error, collection) {
       }
       
       html = "<div id='textbox'>\
-        <div class='g-tooltip-title'><b>" + d.login + "</b></div>";
-      html += "</div>\
-        <div style='clear: both;'></div>\
-        <div class='g-tooltip-obs'><b>" + d.observation_count + "</b> observations</div>";
-        
-
+        <div class='g-tooltip-title'>" + d.properties.name + "</div>";
+      
       tooltip
         .style("left", position[0] + "px")
         .style("top", position[1] + "px")
@@ -315,13 +186,14 @@ d3.json("../admin0.json", function(error, collection) {
 
     //Hide the tooltip when the mouse moves away
     function removeTooltip(d) {
-      var element = d3.selectAll(".cell_"+d.user_id);
+      var element = d3.selectAll("#"+d.id.replace(".","_").replace(".","_"));
       element.style("stroke", "#fff")
         .style("stroke-width", ".5px");
       tooltip.style("display", "none");
     }//function removeTooltip
     
     d3.selection.prototype.position = function() {
+      console.log(this)
       var el = this.node();
       var elPos = el.getBoundingClientRect();
       var vpPos = getVpPos(el);
@@ -343,7 +215,7 @@ d3.json("../admin0.json", function(error, collection) {
    };
 
 });
-}
+
 d3.select(self.frameElement).style("height", height + "px");
 
 </script>
