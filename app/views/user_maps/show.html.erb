@@ -106,7 +106,7 @@ d3.selection.prototype.moveToFront = function() {
 };
 
 queue()
-	.defer(d3.json, "http://loarie.github.io/map_users_<%= @user_map.name %>.json")
+	.defer(d3.json, "https://loarie.github.io/map_users_<%= @user_map.name %>.json")
   .await(renderGraph);
 
 function renderGraph(error, users) {
