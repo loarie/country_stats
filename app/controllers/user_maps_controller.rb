@@ -1,7 +1,7 @@
 class UserMapsController < ApplicationController
 
   def show
-    @user_map = UserMap.find(params[:id])
+    @user_map = UserMap.find_by(name: params[:name])
   end
 
   def new

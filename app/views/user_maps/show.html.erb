@@ -112,7 +112,7 @@ queue()
 function renderGraph(error, users) {
 
 
-d3.json("../admin0.json", function(error, collection) {
+d3.json("https://static.inaturalist.org/misc/country_stats/admin0.json", function(error, collection) {
   if (error) throw error;
   var country_id = "<%= @user_map.name.upcase %>";
   var it = topojson.feature(collection, collection.objects.subunits).features.filter(function(d){return d.id == country_id;})
@@ -136,7 +136,7 @@ d3.json("../admin0.json", function(error, collection) {
     .attr("class", "background")
     .attr("c", function(d){ return d.id; });
   
-  d3.json("../admin_1/"+country_id+"_admin1.json", function(error, a1) {
+  d3.json("https://static.inaturalist.org/misc/country_stats/admin1/" + country_id + "_admin1.json", function(error, a1) {
     if (error) return console.error(error);
     layer1.append("path")
       .datum(topojson.feature(a1, a1.objects.subunits))
