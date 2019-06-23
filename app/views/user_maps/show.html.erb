@@ -106,13 +106,13 @@ d3.selection.prototype.moveToFront = function() {
 };
 
 queue()
-	.defer(d3.json, "../user_maps_users/users_<%= @user_map.name %>.json")
+	.defer(d3.json, "http://loarie.github.io/map_users_<%= @user_map.name %>.json")
   .await(renderGraph);
 
 function renderGraph(error, users) {
 
 
-d3.json("https://static.inaturalist.org/misc/country_stats/admin0.json", function(error, collection) {
+d3.json("https://loarie.github.io/admin0.json", function(error, collection) {
   if (error) throw error;
   var country_id = "<%= @user_map.name.upcase %>";
   var it = topojson.feature(collection, collection.objects.subunits).features.filter(function(d){return d.id == country_id;})
@@ -136,7 +136,7 @@ d3.json("https://static.inaturalist.org/misc/country_stats/admin0.json", functio
     .attr("class", "background")
     .attr("c", function(d){ return d.id; });
   
-  d3.json("https://static.inaturalist.org/misc/country_stats/admin1/" + country_id + "_admin1.json", function(error, a1) {
+  d3.json("https://loarie.github.io/" + country_id.toLowerCase() + "_admin1.json", function(error, a1) {
     if (error) return console.error(error);
     layer1.append("path")
       .datum(topojson.feature(a1, a1.objects.subunits))
