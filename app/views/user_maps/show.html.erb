@@ -136,7 +136,7 @@ d3.json("../admin0.json", function(error, collection) {
     .attr("class", "background")
     .attr("c", function(d){ return d.id; });
   
-  d3.json("https://loarie.github.io/" + country_id.toLowerCase() + "_admin1.json", function(error, a1) {
+  d3.json("../admin1/" + country_id.toLowerCase() + "_admin1.json", function(error, a1) {
     if (error) return console.error(error);
     layer1.append("path")
       .datum(topojson.feature(a1, a1.objects.subunits))
