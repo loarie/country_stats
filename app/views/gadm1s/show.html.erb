@@ -148,7 +148,7 @@ d3.json("../gadmin0_10s.json", function(error, collection) {
       .data(topojson.feature(a1, a1.objects.subunits).features)
       .enter().append("path")
       .attr("class", "subunit")
-      .attr("id", function(d) { console.log(d); return d.id.split(' ').join('_'); })
+      .attr("id", function(d) { console.log(d); return d.id.split(' ').join('_').split('\'').join('_'); })
       .attr("d", path)
       .attr("fill", function(d, i) { return color(i % 10); })
       .style("pointer-events", "all")
@@ -166,7 +166,7 @@ d3.json("../gadmin0_10s.json", function(error, collection) {
     //Example of a default tooltip where you make use of "this"
     //Show the tooltip on the hovered over element
     function showTooltip(d) {
-      var element = d3.selectAll("#"+d.id.split(' ').join('_'));
+      var element = d3.selectAll("#"+d.id.split(' ').join('_').split('\'').join('_'));
       var extent = d3.selectAll(".extent");
       element.style("stroke", "#000")
         .style("stroke-width", "2px");
@@ -204,7 +204,7 @@ d3.json("../gadmin0_10s.json", function(error, collection) {
 
     //Hide the tooltip when the mouse moves away
     function removeTooltip(d) {
-      var element = d3.selectAll("#"+d.id.split(' ').join('_'));
+      var element = d3.selectAll("#"+d.id.split(' ').join('_').split('\'').join('_'));
       element.style("stroke", "#fff")
         .style("stroke-width", ".5px");
       tooltip.style("display", "none");
