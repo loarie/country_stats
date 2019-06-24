@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
+<title><%= @identifier.name %> identifiers</title>
 <style>
   .icon {
     fill: #ffffff;  
@@ -66,7 +67,7 @@ window.mobilecheck = function() {
 
 var format = d3.format("0,000");
 
-var margin = {top: 50, right: 50, bottom: 50, left: 50},
+var margin = {top: 50, right: 50, bottom: 0, left: 50},
   width = 500 - margin.left - margin.right,
   height = 300 - margin.top - margin.bottom;
 
@@ -205,7 +206,7 @@ function showTooltip(d) {
          <div style='clear: both;'></div>\
          <div class='g-tooltip-topobserver'>TOP Identifier</div>\
          <div style='clear: both;'></div>\
-         <div class='g-tooltip-title'>@" + d.login + "</div>";
+         <div class='g-tooltip-title'><b>" + d.login + "</b></div>";
   
   tooltip
     .style("left", position[0] + "px")

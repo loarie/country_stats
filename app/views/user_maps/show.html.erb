@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
-<title>Top Users By Country</title>
+<title><%= @user_map.name.upcase %> top users</title>
 <style>
   .feature {
     fill: #f1b597;
@@ -283,7 +283,7 @@ d3.json("../gadmin0_10s.json", function(error, collection) {
   	.on("mouseout",  removeTooltip)
     .on("click", function(d){
       if(!window.mobilecheck()){
-        var url = "https://www.inaturalist.org/observations?verifiable=true&user_id="+d.user_id
+        var url = "https://www.inaturalist.org/observations?verifiable=true&user_id="+d.user_id+"&place_id="+<%= @user_map.place_id %>
         window.open(url);
       }
     });
