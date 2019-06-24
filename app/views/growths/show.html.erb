@@ -87,7 +87,7 @@ body {
       .append("g")
       .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-  d3.json("../growths/growth_<%= @growth.name %>.json", function(error, data) {
+  d3.json("../growth/growth_<%= @growth.name %>.json", function(error, data) {
   
     if (error) throw error;
 

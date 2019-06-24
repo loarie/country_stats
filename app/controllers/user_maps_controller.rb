@@ -4,6 +4,4 @@ class UserMapsController < ApplicationController
     @user_map = UserMap.find_by(name: params[:name])
   end
 
-  def new
-  end
 end

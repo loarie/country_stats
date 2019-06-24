@@ -68,13 +68,37 @@ window.mobilecheck = function() {
   return check;
 }
 
+var country_id = "<%= @user_map.name.upcase %>";
 var lat_sep = 10;
 var lng_sep = 10;
 var randomlat = d3.randomUniform(0, 3*lat_sep/10);
 var randomlng = d3.randomUniform(0, 3*lng_sep/10);
+var olap = 1;
+if( country_id == "USA" ){
+  var scale_fact = 1.2;
+    width = 900,
+    height = 600;
+}else if( country_id == "MEX" ){
+  var scale_fact = 1.05;
+    width = 900,
+    height = 600;
+}else if( country_id == "CAN" ){
+  var scale_fact = 1.05;
+    width = 900,
+    height = 800;
+}else if( country_id == "NZL" ){
+  var scale_fact = 1;
+    width = 900,
+    height = 900;
+}else{
+  var scale_fact = 1;
+    width = 900,
+    height = 900; 
+}
 
-var width = 960,
-  height = 600;
+var lus = 3;
+var uus = 30;
+
 
 var projection = d3.geo.orthographic()
   .translate([width / 2, height / 2])
@@ -106,15 +130,14 @@ d3.selection.prototype.moveToFront = function() {
 };
 
 queue()
-	.defer(d3.json, "https://loarie.github.io/map_users_<%= @user_map.name %>.json")
+	.defer(d3.json, "../user_map/user_map_<%= @user_map.name %>.json")
   .await(renderGraph);
 
 function renderGraph(error, users) {
 
 
-d3.json("../admin0.json", function(error, collection) {
+d3.json("../gadmin0_10s.json", function(error, collection) {
   if (error) throw error;
-  var country_id = "<%= @user_map.name.upcase %>";
   var it = topojson.feature(collection, collection.objects.subunits).features.filter(function(d){return d.id == country_id;})
   var p = d3.geo.centroid(it[0])
   var currentScale = projection.scale();
@@ -123,30 +146,28 @@ d3.json("../admin0.json", function(error, collection) {
     .projection(projection);
   path.projection(projection);
   var b = path.bounds(it[0]);
-  var nextScale = currentScale * 1 / Math.max((b[1][0] - b[0][0]) / (width/1.25), (b[1][1] - b[0][1]) / (height/1.25));
+  var nextScale = currentScale * 1 / Math.max((b[1][0] - b[0][0]) / (width/scale_fact), (b[1][1] - b[0][1]) / (height/scale_fact));
   path.projection(projection.scale(nextScale));
   
   layer1.selectAll("path")
     .data( topojson.feature( collection, collection.objects.subunits ).features )
-    //.data( collection.features )
     .enter().append("path")
     .filter(function(d){ return d.id != country_id;})
     .attr("d", path)
     .style("stroke-width", function(d){ return d.id == country_id ? 2 : 1; })
     .attr("class", "background")
     .attr("c", function(d){ return d.id; });
-  
-  d3.json("../admin1/" + country_id.toLowerCase() + "_admin1.json", function(error, a1) {
+  d3.json("../admin1/" + country_id.toLowerCase() + "_gadmin1.json", function(error, a1) {
     if (error) return console.error(error);
     layer1.append("path")
       .datum(topojson.feature(a1, a1.objects.subunits))
       .attr("d", path)
-      .attr("class", "feature");
+    .attr("class", "feature");
     });
   
   var rad_scale = d3.scale.log()
     .domain( [d3.min(users.map(function(n){return n.observation_count})),d3.max(users.map(function(n){return n.observation_count}))] )
-    .range( [3,25] );
+    .range( [lus,uus] );
   
   var nodes = users.map(function(d) {
     var x = projection([parseFloat(d.lng), parseFloat(d.lat)])[0];
@@ -181,7 +202,7 @@ d3.json("../admin0.json", function(error, collection) {
       if (n !== node) {
         var dx = node.x - n.x, dy = node.y - n.y,
           l = Math.sqrt(dx*dx+dy*dy);
-        if (l < node.r + n.r - d3.min([node.r,n.r])) {
+        if (l < node.r + n.r - olap*d3.min([node.r,n.r])) {
           node.overlapped = true;
         }
       }
@@ -207,8 +228,8 @@ d3.json("../admin0.json", function(error, collection) {
     })
     .attr("class", function(d,i) { return "cell_" + d.user_id; }) 
     .style("fill", "white")
-    .style("stroke", "black")
-    .style("stroke-width", 0.25);
+    .style("stroke", "white")
+    .style("stroke-width", 2);
     
   node.append("clipPath")
     .attr('id', function(d, i) {
@@ -275,8 +296,8 @@ d3.json("../admin0.json", function(error, collection) {
       var element_parent = d3.selectAll("g.cell_"+d.user_id);
       element_parent.moveToFront();
       var extent = d3.selectAll(".extent");
-      element.style("stroke", "#000")
-        .style("stroke-width", "2px");
+      element.style("stroke", "#E56B25")
+        .style("stroke-width", "4px");
       
       //3 ways to do this
       //var position = [parseInt(element.attr("cx")),parseInt(element.attr("cy"))]; //unresponsive using an element
@@ -317,7 +338,7 @@ d3.json("../admin0.json", function(error, collection) {
     function removeTooltip(d) {
       var element = d3.selectAll(".cell_"+d.user_id);
       element.style("stroke", "#fff")
-        .style("stroke-width", ".5px");
+        .style("stroke-width", "2px");
       tooltip.style("display", "none");
     }//function removeTooltip
     

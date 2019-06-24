@@ -1,5 +1,6 @@
 Rails.application.routes.draw do
   root 'application#hello'
+  resources :internationals, param: :week
   resources :user_maps, param: :name
   resources :growths, param: :name
   resources :identifiers, param: :name

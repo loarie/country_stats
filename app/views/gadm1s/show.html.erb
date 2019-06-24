@@ -67,8 +67,28 @@ window.mobilecheck = function() {
 
 var color = d3.scale.category10();
 
-var width = 960,
-  height = 600;
+var country_id = "<%= @gadm1.name.upcase %>";
+if( country_id == "USA" ){
+  var scale_fact = 1.2;
+    width = 900,
+    height = 600;
+}else if( country_id == "MEX" ){
+  var scale_fact = 1.05;
+    width = 900,
+    height = 600;
+}else if( country_id == "CAN" ){
+  var scale_fact = 1.05;
+    width = 900,
+    height = 800;
+}else if( country_id == "NZL" ){
+  var scale_fact = 1;
+    width = 900,
+    height = 900;
+}else{
+  var scale_fact = 1;
+    width = 900,
+    height = 900; 
+}
 
 var projection = d3.geo.orthographic()
   .translate([width / 2, height / 2])
@@ -99,9 +119,9 @@ d3.selection.prototype.moveToFront = function() {
   });
 };
 
-d3.json("../admin0.json", function(error, collection) {
+d3.json("../gadmin0_10s.json", function(error, collection) {
   if (error) throw error;
-  var country_id = "<%= @gadm2.name.upcase %>";
+  var country_id = "<%= @gadm1.name.upcase %>";
   var it = topojson.feature(collection, collection.objects.subunits).features.filter(function(d){return d.id == country_id;})
   var p = d3.geo.centroid(it[0])
   var currentScale = projection.scale();
@@ -110,7 +130,7 @@ d3.json("../admin0.json", function(error, collection) {
     .projection(projection);
   path.projection(projection);
   var b = path.bounds(it[0]);
-  var nextScale = currentScale * 1 / Math.max((b[1][0] - b[0][0]) / (width/1.25), (b[1][1] - b[0][1]) / (height/1.25));
+  var nextScale = currentScale * 1 / Math.max((b[1][0] - b[0][0]) / (width/scale_fact), (b[1][1] - b[0][1]) / (height/scale_fact));
   path.projection(projection.scale(nextScale));
   
   layer1.selectAll("path")
@@ -122,13 +142,13 @@ d3.json("../admin0.json", function(error, collection) {
     .attr("class", "background")
     .attr("c", function(d){ return d.id; });
   
-  d3.json("../gadm1/<%= @gadm1.name %>1.json", function(error, a1) {
+  d3.json("../admin1/<%= @gadm1.name %>_gadmin1.json", function(error, a1) {
     if (error) return console.error(error);
     layer1.selectAll(".subunit")
       .data(topojson.feature(a1, a1.objects.subunits).features)
       .enter().append("path")
       .attr("class", "subunit")
-      .attr("id", function(d) { return d.id.replace(".","_"); })
+      .attr("id", function(d) { console.log(d); return d.id.split(' ').join('_'); })
       .attr("d", path)
       .attr("fill", function(d, i) { return color(i % 10); })
       .style("pointer-events", "all")
@@ -146,13 +166,11 @@ d3.json("../admin0.json", function(error, collection) {
     //Example of a default tooltip where you make use of "this"
     //Show the tooltip on the hovered over element
     function showTooltip(d) {
-      console.log(d)
-      var element = d3.selectAll("#"+d.id.replace(".","_"));
+      var element = d3.selectAll("#"+d.id.split(' ').join('_'));
       var extent = d3.selectAll(".extent");
       element.style("stroke", "#000")
         .style("stroke-width", "2px");
       
-      console.log(element)
       //3 ways to do this
       //var position = [parseInt(element.attr("cx")),parseInt(element.attr("cy"))]; //unresponsive using an element
       //var position = [d3.event.pageX,d3.event.pageY];  //using the mouse - responsive
@@ -186,14 +204,13 @@ d3.json("../admin0.json", function(error, collection) {
 
     //Hide the tooltip when the mouse moves away
     function removeTooltip(d) {
-      var element = d3.selectAll("#"+d.id.replace(".","_"));
+      var element = d3.selectAll("#"+d.id.split(' ').join('_'));
       element.style("stroke", "#fff")
         .style("stroke-width", ".5px");
       tooltip.style("display", "none");
     }//function removeTooltip
     
     d3.selection.prototype.position = function() {
-      console.log(this)
       var el = this.node();
       var elPos = el.getBoundingClientRect();
       var vpPos = getVpPos(el);
