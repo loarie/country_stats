@@ -99,7 +99,7 @@ d3.selection.prototype.moveToFront = function() {
   });
 };
 
-d3.json("../admin0.json", function(error, collection) {
+d3.json("../gadmin0_10s.json", function(error, collection) {
   if (error) throw error;
   var country_id = "<%= @gadm2.name.upcase %>";
   var it = topojson.feature(collection, collection.objects.subunits).features.filter(function(d){return d.id == country_id;})
@@ -122,13 +122,13 @@ d3.json("../admin0.json", function(error, collection) {
     .attr("class", "background")
     .attr("c", function(d){ return d.id; });
   
-  d3.json("../gadm2/<%= @gadm2.name %>2.json", function(error, a1) {
+  d3.json("../admin2/<%= @gadm2.name %>_gadmin2.json", function(error, a1) {
     if (error) return console.error(error);
     layer1.selectAll(".subunit")
       .data(topojson.feature(a1, a1.objects.subunits).features)
       .enter().append("path")
       .attr("class", "subunit")
-      .attr("id", function(d) { return d.id.replace(".","_").replace(".","_"); })
+      .attr("id", function(d) { return "id_"+d.id; })
       .attr("d", path)
       .attr("fill", function(d) { return color(d.properties.l1.split(".")[1].split("_")[0] % 10); })
       .style("pointer-events", "all")
@@ -147,12 +147,11 @@ d3.json("../admin0.json", function(error, collection) {
     //Show the tooltip on the hovered over element
     function showTooltip(d) {
       console.log(d)
-      var element = d3.selectAll("#"+d.id.replace(".","_").replace(".","_"));
+      var element = d3.selectAll("#id_"+d.id);
       var extent = d3.selectAll(".extent");
       element.style("stroke", "#000")
         .style("stroke-width", "2px");
       
-      console.log(element)
       //3 ways to do this
       //var position = [parseInt(element.attr("cx")),parseInt(element.attr("cy"))]; //unresponsive using an element
       //var position = [d3.event.pageX,d3.event.pageY];  //using the mouse - responsive
@@ -186,7 +185,7 @@ d3.json("../admin0.json", function(error, collection) {
 
     //Hide the tooltip when the mouse moves away
     function removeTooltip(d) {
-      var element = d3.selectAll("#"+d.id.replace(".","_").replace(".","_"));
+      var element = d3.selectAll("#id_"+d.id);
       element.style("stroke", "#fff")
         .style("stroke-width", ".5px");
       tooltip.style("display", "none");
