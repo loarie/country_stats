@@ -2,6 +2,17 @@
 <meta charset="utf-8">
 <title>Level 1 Places By Country</title>
 <style>
+  .place,
+  .place-label {
+    fill: #444;
+  }
+  
+  text {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 10px;
+    pointer-events: none;
+  }
+  
   .subunit {
     cursor: pointer;
     stroke: #fff;
@@ -127,7 +138,7 @@ d3.json("../gadmin0_10s.json", function(error, collection) {
   var currentScale = projection.scale();
   projection.rotate([-p[0], -p[1]]);
   var path = d3.geo.path()
-    .projection(projection);
+    .projection(projection).pointRadius(2);
   path.projection(projection);
   var b = path.bounds(it[0]);
   var nextScale = currentScale * 1 / Math.max((b[1][0] - b[0][0]) / (width/scale_fact), (b[1][1] - b[0][1]) / (height/scale_fact));
@@ -143,12 +154,13 @@ d3.json("../gadmin0_10s.json", function(error, collection) {
     .attr("c", function(d){ return d.id; });
   
   d3.json("../admin1/<%= @gadm1.name %>_gadmin1.json", function(error, a1) {
+    console.log(a1);
     if (error) return console.error(error);
     layer1.selectAll(".subunit")
       .data(topojson.feature(a1, a1.objects.subunits).features)
       .enter().append("path")
       .attr("class", "subunit")
-      .attr("id", function(d) { console.log(d); return d.id.split(' ').join('_').split('\'').join('_'); })
+      .attr("id", function(d) { return "id_"+d.id; })
       .attr("d", path)
       .attr("fill", function(d, i) { return color(i % 10); })
       .style("pointer-events", "all")
@@ -160,13 +172,30 @@ d3.json("../gadmin0_10s.json", function(error, collection) {
           window.open(url);
         }
       });
-    });
-  
+    
+    layer1.append("path")
+      .datum(topojson.feature(a1, a1.objects.places))
+      .attr("d", path)
+      .attr("class", "place");
+    
+    layer1.selectAll(".place-label")
+      .data(topojson.feature(a1, a1.objects.places).features)
+      .enter().append("text")
+      .attr("class", "place-label")
+      .attr("transform", function(d) { return "translate(" + projection(d.geometry.coordinates) + ")"; })
+      .attr("x", function(d) { return d.geometry.coordinates[0] > -1 ? 6 : -6; })
+      .attr("dy", ".35em")
+      .style("text-anchor", function(d) { return d.geometry.coordinates[0] > -1 ? "start" : "end"; })
+      .text(function(d) { return d.properties.name; });
+      
+  });
+    
+    
 
     //Example of a default tooltip where you make use of "this"
     //Show the tooltip on the hovered over element
     function showTooltip(d) {
-      var element = d3.selectAll("#"+d.id.split(' ').join('_').split('\'').join('_'));
+      var element = d3.selectAll("#id_"+d.id);
       var extent = d3.selectAll(".extent");
       element.style("stroke", "#000")
         .style("stroke-width", "2px");
@@ -204,7 +233,7 @@ d3.json("../gadmin0_10s.json", function(error, collection) {
 
     //Hide the tooltip when the mouse moves away
     function removeTooltip(d) {
-      var element = d3.selectAll("#"+d.id.split(' ').join('_').split('\'').join('_'));
+      var element = d3.selectAll("#id_"+d.id);
       element.style("stroke", "#fff")
         .style("stroke-width", ".5px");
       tooltip.style("display", "none");
